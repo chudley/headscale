@@ -214,6 +214,8 @@ func (ns *noiseServer) NoisePollNetMapHandler(
 	node, err := ns.headscale.db.GetNodeByNodeKey(mapRequest.NodeKey)
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
+			log.Info().Interface("nodeKey", mapRequest.NodeKey).Msg("node not found")
+
 			httpError(writer, NewHTTPError(http.StatusNotFound, "node not found in NoisePollNetMapHandler", nil))
 			return
 		}
