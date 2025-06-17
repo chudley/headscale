@@ -273,6 +273,8 @@ func (h *Headscale) scheduledTasks(ctx context.Context) {
 			return
 
 		case <-expireTicker.C:
+			log.Info().Msg("paranoid: scheduled task tick")
+
 			var update types.StateUpdate
 			var changed bool
 
@@ -615,6 +617,9 @@ func (h *Headscale) Serve() error {
 	if err != nil {
 		return fmt.Errorf("failed to list ephemeral nodes: %w", err)
 	}
+
+	log.Info().Interface("nodes", ephmNodes).Msg("paranoid: ephemeral nodes at startup")
+
 	for _, node := range ephmNodes {
 		h.ephemeralGC.Schedule(node.ID, h.cfg.EphemeralNodeInactivityTimeout)
 	}

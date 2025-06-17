@@ -223,6 +223,9 @@ func (ns *noiseServer) NoisePollNetMapHandler(
 
 	sess := ns.headscale.newMapSession(req.Context(), mapRequest, writer, node)
 	sess.tracef("a node sending a MapRequest with Noise protocol")
+
+	log.Info().Interface("is_streaming", sess.isStreaming()).Msg("paranoid: session is streaming?")
+
 	if !sess.isStreaming() {
 		sess.serve()
 	} else {

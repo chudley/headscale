@@ -13,6 +13,7 @@ import (
 	"github.com/juanfont/headscale/hscontrol/policy"
 	"github.com/juanfont/headscale/hscontrol/types"
 	"github.com/juanfont/headscale/hscontrol/util"
+	"github.com/rs/zerolog/log"
 	"gorm.io/gorm"
 	"tailscale.com/tailcfg"
 	"tailscale.com/types/key"
@@ -72,6 +73,8 @@ func (h *Headscale) handleExistingNode(
 	if node.MachineKey != machineKey {
 		return nil, NewHTTPError(http.StatusUnauthorized, "node exist with different machine key", nil)
 	}
+
+	log.Info().Interface("node", node).Interface("machineKey", machineKey).Interface("expiry", regReq.Expiry).Msg("paranoid: handling existing node")
 
 	expired := node.IsExpired()
 	if !expired && !regReq.Expiry.IsZero() {

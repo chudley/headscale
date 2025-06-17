@@ -13,6 +13,7 @@ import (
 	v1 "github.com/juanfont/headscale/gen/go/headscale/v1"
 	"github.com/juanfont/headscale/hscontrol/policy/matcher"
 	"github.com/juanfont/headscale/hscontrol/util"
+	"github.com/rs/zerolog/log"
 	"go4.org/netipx"
 	"google.golang.org/protobuf/types/known/timestamppb"
 	"tailscale.com/net/tsaddr"
@@ -126,8 +127,11 @@ func (node Node) IsExpired() bool {
 	// it wants an expiry time, it is therefore considered
 	// to mean "not expired"
 	if node.Expiry == nil || node.Expiry.IsZero() {
+		log.Info().Interface("node", node).Msg("paranoid: this node has not expired")
 		return false
 	}
+
+	log.Info().Interface("expired", time.Since(*node.Expiry) > 0).Interface("node", node).Msg("paranoid: node expired?")
 
 	return time.Since(*node.Expiry) > 0
 }
@@ -135,7 +139,11 @@ func (node Node) IsExpired() bool {
 // IsEphemeral returns if the node is registered as an Ephemeral node.
 // https://tailscale.com/kb/1111/ephemeral-nodes/
 func (node *Node) IsEphemeral() bool {
-	return node.AuthKey != nil && node.AuthKey.Ephemeral
+	var is_ephemeral = node.AuthKey != nil && node.AuthKey.Ephemeral
+
+	log.Info().Interface("node", node).Interface("is_ephemeral", is_ephemeral).Msg("paranoid: node ephemeral?")
+
+	return is_ephemeral
 }
 
 func (node *Node) IPs() []netip.Addr {

@@ -93,6 +93,8 @@ func (hsdb *HSDatabase) ListEphemeralNodes() (types.Nodes, error) {
 			return nil, err
 		}
 
+		log.Info().Interface("nodes", nodes).Msg("paranoid: listed ephemeral nodes")
+
 		return nodes, nil
 	})
 }
@@ -159,6 +161,8 @@ func GetNodeByMachineKey(
 		return nil, result.Error
 	}
 
+	log.Info().Interface("machineKey", machineKey).Interface("node", mach).Msg("paranoid: got node by machine key")
+
 	return &mach, nil
 }
 
@@ -181,6 +185,8 @@ func GetNodeByNodeKey(
 		First(&mach, "node_key = ?", nodeKey.String()); result.Error != nil {
 		return nil, result.Error
 	}
+
+	log.Info().Interface("nodeKey", nodeKey).Interface("node", mach).Msg("paranoid: got node by node key")
 
 	return &mach, nil
 }
@@ -295,6 +301,8 @@ func RenameNode(tx *gorm.DB,
 
 func (hsdb *HSDatabase) NodeSetExpiry(nodeID types.NodeID, expiry time.Time) error {
 	return hsdb.Write(func(tx *gorm.DB) error {
+		log.Info().Interface("nodeID", nodeID).Interface("expiry", expiry).Msg("paranoid: setting node expiry")
+
 		return NodeSetExpiry(tx, nodeID, expiry)
 	})
 }
@@ -322,6 +330,8 @@ func DeleteNode(tx *gorm.DB,
 		return err
 	}
 
+	log.Info().Interface("node", node).Msgf("paranoid: deleted node")
+
 	return nil
 }
 
@@ -335,6 +345,9 @@ func (hsdb *HSDatabase) DeleteEphemeralNode(
 		if err := tx.Unscoped().Delete(&types.Node{}, nodeID).Error; err != nil {
 			return err
 		}
+
+		log.Info().Interface("nodeID", nodeID).Msg("paranoid: deleted ephemeral node")
+
 		return nil
 	})
 }
@@ -443,6 +456,9 @@ func RegisterNode(tx *gorm.DB, node types.Node, ipv4 *netip.Addr, ipv6 *netip.Ad
 	// If the same node is registered again, but to a new user, then that is considered
 	// a new node.
 	oldNode, _ := GetNodeByMachineKey(tx, node.MachineKey)
+
+	log.Info().Interface("oldNode", oldNode).Interface("node", node).Msg("paranoid: old node vs new node")
+
 	if oldNode != nil && oldNode.UserID == node.UserID {
 		node.ID = oldNode.ID
 		node.GivenName = oldNode.GivenName
@@ -595,14 +611,23 @@ func ExpireExpiredNodes(tx *gorm.DB,
 	// checked everything.
 	started := time.Now()
 
+	log.Info().Interface("lastCheck", lastCheck).Msg("paranoid: expiring expired nodes")
+
 	expired := make([]*tailcfg.PeerChange, 0)
 
 	nodes, err := ListNodes(tx)
 	if err != nil {
+		log.Warn().Err(err).Msg("paranoid: error listing nodes")
+
 		return time.Unix(0, 0), types.StateUpdate{}, false
 	}
+
+	log.Info().Interface("nodes", nodes).Msg("paranoid: got nodes to check for expiry")
+
 	for _, node := range nodes {
 		if node.IsExpired() && node.Expiry.After(lastCheck) {
+			log.Info().Interface("node", node).Msg("paranoid: expiring node")
+
 			expired = append(expired, &tailcfg.PeerChange{
 				NodeID:    tailcfg.NodeID(node.ID),
 				KeyExpiry: node.Expiry,
@@ -676,6 +701,8 @@ func (e *EphemeralGarbageCollector) Schedule(nodeID types.NodeID, expiry time.Du
 	if oldTimer, exists := e.toBeDeleted[nodeID]; exists {
 		oldTimer.Stop()
 	}
+
+	log.Info().Interface("nodeID", nodeID).Interface("expiry", expiry).Msg("paranoid: scheduling node for deletion")
 
 	timer := time.NewTimer(expiry)
 	e.toBeDeleted[nodeID] = timer
