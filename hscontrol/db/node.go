@@ -108,6 +108,9 @@ func (hsdb *HSDatabase) getNode(uid types.UserID, name string) (*types.Node, err
 // getNode finds a Node by name and user and returns the Node struct.
 func getNode(tx *gorm.DB, uid types.UserID, name string) (*types.Node, error) {
 	nodes, err := ListNodesByUser(tx, uid)
+
+	log.Info().Interface("nodes", nodes).Interface("name", name).Interface("uid", uid).Msg("paranoid: listed nodes for getNode")
+
 	if err != nil {
 		return nil, err
 	}
