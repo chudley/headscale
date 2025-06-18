@@ -496,6 +496,8 @@ func (node *Node) RegisterMethodToV1Enum() v1.RegisterMethod {
 
 // ApplyHostnameFromHostInfo takes a Hostinfo struct and updates the node.
 func (node *Node) ApplyHostnameFromHostInfo(hostInfo *tailcfg.Hostinfo) {
+	log.Info().Interface("node", node).Interface("hostInfo", hostInfo).Msg("paranoid: applying hostname")
+
 	if hostInfo == nil {
 		return
 	}

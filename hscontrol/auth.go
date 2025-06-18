@@ -147,10 +147,13 @@ func (h *Headscale) waitForFollowup(
 			return nil, NewHTTPError(http.StatusUnauthorized, "registration timed out", err)
 		case node := <-reg.Registered:
 			if node == nil {
-				log.Info().Interface("followupReg", followupReg).Msg("node not found")
+				log.Info().Interface("followupReg", followupReg).Msg("paranoid: node not found")
 
 				return nil, NewHTTPError(http.StatusUnauthorized, "node not found in waitForFollowup", nil)
 			}
+
+			log.Info().Interface("node", node).Msg("paranoid: got node from registration cache")
+
 			return nodeToRegisterResponse(node), nil
 		}
 	}

@@ -141,6 +141,8 @@ func GetNodeByID(tx *gorm.DB, id types.NodeID) (*types.Node, error) {
 		return nil, result.Error
 	}
 
+	log.Info().Interface("id", id).Interface("node", mach).Msg("paranoid: got node by id")
+
 	return &mach, nil
 }
 

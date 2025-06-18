@@ -427,6 +427,8 @@ func (m *mapSession) handleEndpointUpdate() {
 
 	m.node.ApplyPeerChange(&change)
 
+	log.Info().Interface("before", m.node.Hostinfo).Interface("after", m.req.Hostinfo).Msg("paranoid: host info update?")
+
 	sendUpdate, routesChanged := hostInfoChanged(m.node.Hostinfo, m.req.Hostinfo)
 
 	// The node might not set NetInfo if it has not changed and if
@@ -446,6 +448,8 @@ func (m *mapSession) handleEndpointUpdate() {
 	// If there is no changes and nothing to save,
 	// return early.
 	if peerChangeEmpty(change) && !sendUpdate {
+		log.Info().Interface("node", m.node).Msg("paranoid: no changes")
+
 		mapResponseEndpointUpdates.WithLabelValues("noop").Inc()
 		return
 	}
@@ -496,6 +500,8 @@ func (m *mapSession) handleEndpointUpdate() {
 	m.node.ApplyHostnameFromHostInfo(m.req.Hostinfo)
 
 	if err := m.h.db.DB.Save(m.node).Error; err != nil {
+		log.Warn().Interface("node", m.node).Err(err).Msg("paranoid: failed to persist node")
+
 		m.errf(err, "Failed to persist/update node in the database")
 		http.Error(m.w, "", http.StatusInternalServerError)
 		mapResponseEndpointUpdates.WithLabelValues("error").Inc()
