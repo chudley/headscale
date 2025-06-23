@@ -248,6 +248,8 @@ func (h *Headscale) handleRegisterWithAuthKey(
 		return nil, err
 	}
 
+	log.Info().Interface("node", node).Msg("paranoid: created new node")
+
 	updateSent, err := nodesChangedHook(h.db, h.polMan, h.nodeNotifier)
 	if err != nil {
 		return nil, fmt.Errorf("nodes changed hook: %w", err)
